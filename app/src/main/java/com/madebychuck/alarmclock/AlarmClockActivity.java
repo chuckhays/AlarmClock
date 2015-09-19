@@ -6,9 +6,15 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.graphics.Color;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -44,6 +50,8 @@ public class AlarmClockActivity extends Activity {
      * The instance of the {@link SystemUiHider} for this activity.
      */
     private SystemUiHider mSystemUiHider;
+
+    private AlarmShapeView shapeView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +120,50 @@ public class AlarmClockActivity extends Activity {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+
+        shapeView = (AlarmShapeView)findViewById(R.id.fullscreen_content);
+
+        shapeView.setCircleColor(Color.BLUE);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        CountDownTimer cdt = new CountDownTimer(Long.MAX_VALUE, 15000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Calendar cal = Calendar.getInstance();
+                int minute = cal.get(Calendar.MINUTE);
+                //24 hour format
+                int hourofday = cal.get(Calendar.HOUR_OF_DAY);
+                boolean ok = false;
+
+                if (hourofday < 6 || hourofday >= 19) {
+                    // Before 6 am or after 7 pm
+                    ok = false;
+
+                } else if (hourofday == 6 && minute < 45) {
+                    // Between 6 am and 6:44
+                    ok = false;
+                } else {
+                    ok = true;
+                }
+
+                if (ok) {
+                    shapeView.setCircleColor(0xFF01BC01);
+                    shapeView.setLabelColor(0xFF005400);
+                } else {
+                    shapeView.setCircleColor(0xFFBA0B0B);
+                    shapeView.setLabelColor(0xFF690000);
+                }
+                SimpleDateFormat sdf = new SimpleDateFormat("h:mma");
+                shapeView.setLabelText(sdf.format(cal.getTime()));
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        };
+        cdt.start();
     }
 
     @Override
